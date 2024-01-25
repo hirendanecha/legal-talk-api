@@ -106,7 +106,9 @@ exports.notificationMail = async (userData) => {
 
 exports.channelNotificationEmail = async (userData) => {
   let name = userData?.Username;
-  let msg = `you are assigned in HT channel by MasterAdmin`;
+  let msg = `You have been assign in LegalTalk channel by the LegalTalk Admin.
+  To access your channel, log into your LegalTalk account,click on the
+  LegalTalk icon at the top of the page,then click on My Channel.`;
   let redirectUrl = `${environment.FRONTEND_URL}`;
 
   const mailObj = {
@@ -131,9 +133,9 @@ exports.communityApproveEmail = async (profileId, isApprove) => {
       userData[0]?.FirstName + " " + userData[0]?.LastName;
     let msg = "";
     if (isApprove === "Y") {
-      msg = `Your Attorney's has been approved by Master Admin.`;
+      msg = `LegalTalk has approved your Attorney's account.`;
     } else {
-      msg = `Your Attorney's has been unapproved by Master Admin.`;
+      msg = `LegalTalk has unapproved your Attorney's account.`;
     }
     let redirectUrl = `${environment.FRONTEND_URL}`;
     const mailObj = {
