@@ -86,7 +86,7 @@ exports.updateProfile = async function (req, res) {
           Country: reqBody?.Country,
         };
 
-        User.update(req.body.Id, updateUserData, (err, result) => {
+        User.update(req.body.UserID, updateUserData, (err, result) => {
           if (err) return utils.send500(res, err);
         });
       }
