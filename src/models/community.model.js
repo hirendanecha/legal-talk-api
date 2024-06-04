@@ -6,6 +6,7 @@ const { executeQuery } = require("../helpers/utils");
 var Community = function (community) {
   this.profileId = community.profileId;
   this.communityName = community.CommunityName;
+  this.LawFirmName = community.LawFirmName;
   this.slug = community.slug;
   this.communityDescription = community.CommunityDescription;
   this.logoImg = community.logoImg;
