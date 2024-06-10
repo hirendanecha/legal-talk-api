@@ -4,6 +4,8 @@ const jwt = require("jsonwebtoken");
 const __upload_dir = environment.UPLOAD_DIR;
 var fs = require("fs");
 const db = require("../../config/db.config");
+const moment = require("moment");
+const { default: ical } = require("ical-generator");
 
 exports.send404 = function (res, err) {
   res.status(404).send({ error: true, message: err });
@@ -132,9 +134,9 @@ exports.communityApproveEmail = async (profileId, isApprove) => {
       userData[0]?.FirstName + " " + userData[0]?.LastName;
     let msg = "";
     if (isApprove === "Y") {
-      msg = `LegalTalk has approved your Attorney's account.`;
+      msg = `LegalTalk has approved your Lawyer's account.`;
     } else {
-      msg = `LegalTalk has unapproved your Attorney's account.`;
+      msg = `LegalTalk has unapproved your Lawyer's account.`;
     }
     let redirectUrl = `${environment.FRONTEND_URL}`;
     const mailObj = {
@@ -146,6 +148,148 @@ exports.communityApproveEmail = async (profileId, isApprove) => {
     await email.sendMail(mailObj);
     return;
   }
+};
+exports.cancelAppointmentNotificationMail = async (id, lawyerName) => {
+  const query =
+    "select u.Email,p.FirstName,p.LastName,p.Username from users as u left join profile as p on p.UserID = u.Id where p.ID =?";
+  const values = [id];
+  const [data] = await this.executeQuery(query, values);
+  let name = data?.Username || userData.FirstName;
+  let msg = `Your appointment with ${lawyerName} has been cancelled, please book another slot!`;
+  let redirectUrl = `${environment.FRONTEND_URL}`;
+
+  const mailObj = {
+    email: data.Email,
+    subject: "Healing notification",
+    root: "../email-templates/notification.ejs",
+    templateData: { name: name, msg: msg, url: redirectUrl },
+  };
+
+  await email.sendMail(mailObj);
+  return;
+};
+
+exports.sendAppointmentMailToUser = async (data) => {
+  const query =
+    "select u.Email,p.FirstName,p.LastName,p.Username from users as u left join profile as p on p.UserID = u.Id where p.ID =?";
+  const values = [data.profileId];
+  const [userData] = await this.executeQuery(query, values);
+  const query1 =
+    "select u.Email,p.FirstName,p.LastName,p.Username from users as u left join profile as p on p.UserID = u.Id where p.ID =?";
+  const values1 = [data.lawyerProfileId];
+  const [practitionerData] = await this.executeQuery(query1, values1);
+  console.log("practitionerData", practitionerData);
+  if (userData) {
+    let name = `Hi ${userData.Username || userData.FirstName}`;
+    let msg = "";
+    msg = `You have a new request for a video call with ${
+      practitionerData.Username || practitionerData.FirstName
+    }`;
+    const date = data.date;
+    const time = moment(data.date).format("hh:mm a");
+    let redirectUrl = `${environment.FRONTEND_URL}appointment-call/${data.slug}-${userData.Username}`;
+    const drName = practitionerData.Username;
+    const patientEmail = practitionerData.Email;
+    const topic = data.topics;
+    const mailObj = {
+      email: userData.Email,
+      subject: "Request Video Call",
+      root: "../email-templates/appointment-user.ejs",
+      templateData: {
+        name: name,
+        msg: msg,
+        url: redirectUrl,
+        drName: drName,
+        date: moment(data.date).format("MMMM Do YYYY"),
+        time: time,
+        email: patientEmail,
+        topic: topic,
+      },
+    };
+    const calObj = await getIcalObjectInstance(
+      date,
+      msg,
+      redirectUrl,
+      drName,
+      patientEmail
+    );
+    await email.sendMail(mailObj, calObj);
+    return;
+  }
+};
+exports.sendAppointmentMailToPractitioner = async (data) => {
+  const query =
+    "select u.Email,p.FirstName,p.LastName,p.Username from users as u left join profile as p on p.UserID = u.Id where p.ID =?";
+  const values = [data.profileId];
+  const [userData] = await this.executeQuery(query, values);
+  const query1 =
+    "select u.Email,p.FirstName,p.LastName,p.Username from users as u left join profile as p on p.UserID = u.Id where p.ID =?";
+  const values1 = [data.lawyerProfileId];
+  const [practitionerData] = await this.executeQuery(query1, values1);
+  if (practitionerData) {
+    let name = `Hi ${practitionerData.Username || practitionerData.FirstName}`;
+    let msg = "";
+    msg = `You have a new request for a video call with ${
+      userData.Username || userData.FirstName
+    }`;
+    const date = data.date;
+    const time = moment(data.date).format("hh:mm a");
+    let redirectUrl = `${environment.FRONTEND_URL}appointment-call/${data.slug}-${userData.Username}`;
+    const userName = userData.Username;
+    const patientEmail = userData.Email;
+    const topic = data.topics;
+    const mailObj = {
+      email: practitionerData.Email,
+      subject: "Request Video Call",
+      root: "../email-templates/appointment-practitioner.ejs",
+      templateData: {
+        name: name,
+        msg: msg,
+        url: redirectUrl,
+        userName: userName,
+        date: moment(data.date).format("MMMM Do YYYY"),
+        time: time,
+        email: patientEmail,
+        topic: topic,
+      },
+    };
+    const calObj = await getIcalObjectInstance(
+      date,
+      msg,
+      redirectUrl,
+      userName,
+      patientEmail
+    );
+    await email.sendMail(mailObj, calObj);
+    return;
+  }
+};
+
+const getIcalObjectInstance = async (
+  starttime,
+  description,
+  url,
+  name,
+  email
+) => {
+  const cal = ical({
+    domain: "legaltalk.tube",
+    name: "Appointments Reminder",
+  });
+  //   cal.domain("healing.tube");
+  cal.createEvent({
+    start: starttime, // eg : moment()
+    end: moment(starttime).add(30, "min"),
+    description: description, // 'More description'
+    url: url, // 'event url',
+    summary: "Request video call with lawyers",
+    organizer: {
+      // 'organizer details'
+      name: name,
+      email: email,
+    },
+  });
+  return cal;
 };
 
 exports.executeQuery = async (query, values = []) => {
