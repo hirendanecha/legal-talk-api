@@ -160,7 +160,7 @@ exports.cancelAppointmentNotificationMail = async (id, lawyerName) => {
 
   const mailObj = {
     email: data.Email,
-    subject: "Healing notification",
+    subject: "Legaltalk notification",
     root: "../email-templates/notification.ejs",
     templateData: { name: name, msg: msg, url: redirectUrl },
   };
@@ -276,7 +276,7 @@ const getIcalObjectInstance = async (
     domain: "legaltalk.tube",
     name: "Appointments Reminder",
   });
-  //   cal.domain("healing.tube");
+  //   cal.domain("legaltalk.tube");
   cal.createEvent({
     start: starttime, // eg : moment()
     end: moment(starttime).add(30, "min"),

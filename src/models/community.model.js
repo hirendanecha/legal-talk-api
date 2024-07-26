@@ -406,7 +406,7 @@ Community.addEmphasis = async function (
   emphasisList,
   removeEmphasisList
 ) {
-  if (emphasisList.length) {
+  if (emphasisList?.length) {
     const newData = emphasisList
       .map((element) => `(${communityId}, ${element})`)
       .join(", ");
@@ -414,7 +414,7 @@ Community.addEmphasis = async function (
     const emphasis = await executeQuery(query);
     return emphasis;
   }
-  if (removeEmphasisList.length) {
+  if (removeEmphasisList?.length) {
     const query = `delete from practitioner_emphasis where communityId = ${communityId} and eId in (${removeEmphasisList})`;
     const interests = await executeQuery(query);
     return interests;
@@ -422,7 +422,7 @@ Community.addEmphasis = async function (
 };
 
 Community.addAreas = async function (communityId, areaList, removeAreaList) {
-  if (areaList.length) {
+  if (areaList?.length) {
     const newData = areaList
       .map((element) => `(${communityId}, ${element})`)
       .join(", ");
@@ -430,7 +430,7 @@ Community.addAreas = async function (communityId, areaList, removeAreaList) {
     const areas = await executeQuery(query);
     return areas;
   }
-  if (removeAreaList.length) {
+  if (removeAreaList?.length) {
     const query = `delete from practitioner_area where communityId = ${communityId} and aId in (${removeAreaList})`;
     const interests = await executeQuery(query);
     return interests;
